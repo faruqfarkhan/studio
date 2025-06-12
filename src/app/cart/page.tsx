@@ -1,3 +1,4 @@
+
 'use client';
 
 import type React from 'react';
@@ -5,34 +6,60 @@ import { useState, useEffect } from 'react';
 import { CartItem } from '@/components/cart/CartItem';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import type { Product } from '@/lib/mock-data'; // Assuming mock products for demo
 import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
-
-interface CartProduct extends Product {
-  quantity: number;
-}
+import type { CartProduct } from '@/lib/cart-utils';
+import { getCartFromLocalStorage, removeFromCart, updateCartQuantity } from '@/lib/cart-utils';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartProduct[]>([]);
+  const { toast } = useToast();
 
-  // useEffect(() => {
-  //   // Simulate fetching cart items. In a real app, this would come from context/API.
-  //   // For demo, let's add a few items from mock data.
-  //   // const demoCart: CartProduct[] = products.slice(0, 3).map((p, index) => ({
-  //   //   ...p,
-  //   //   quantity: index + 1, 
-  //   // }));
-  //   // setCartItems(demoCart);
-  // }, []);
+  useEffect(() => {
+    const loadCartItems = () => {
+      setCartItems(getCartFromLocalStorage());
+    };
+
+    loadCartItems(); // Initial load
+
+    // Listen for custom event when cart is updated elsewhere
+    window.addEventListener('cartUpdated', loadCartItems);
+
+    return () => {
+      window.removeEventListener('cartUpdated', loadCartItems);
+    };
+  }, []);
 
   const handleRemoveItem = (id: string) => {
+    const itemToRemove = cartItems.find(item => item.id === id);
+    removeFromCart(id);
+    // Optimistically update UI, or rely on 'cartUpdated' event.
+    // For immediate feedback, direct state update is good.
     setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+    if (itemToRemove) {
+      toast({
+        title: "Item removed",
+        description: `${itemToRemove.name} has been removed from your cart.`,
+      });
+    }
   };
 
   const handleQuantityChange = (id: string, quantity: number) => {
+    if (quantity < 1) {
+      toast({
+        title: "Minimum quantity",
+        description: "Quantity cannot be less than 1. Remove item instead.",
+        variant: "destructive"
+      });
+      // Optionally, auto-remove if quantity becomes 0, handled by updateCartQuantity
+      // updateCartQuantity(id, 0); // This would trigger removal
+      // setCartItems(getCartFromLocalStorage()); 
+      return;
+    }
+    updateCartQuantity(id, quantity);
     setCartItems(prevItems => 
-      prevItems.map(item => item.id === id ? { ...item, quantity } : item)
+      prevItems.map(item => item.id === id ? { ...item, quantity } : item).filter(item => item.quantity > 0)
     );
   };
 

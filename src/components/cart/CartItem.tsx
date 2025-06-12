@@ -1,26 +1,22 @@
+
 import Image from 'next/image';
-import type { Product } from '@/lib/mock-data';
+import type { CartProduct } from '@/lib/cart-utils'; // Updated to use CartProduct
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Minus, Plus, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+// useToast is not directly used here for remove, as CartPage handles it
 import type React from 'react';
 
 interface CartItemProps {
-  item: Product & { quantity: number };
+  item: CartProduct; // Updated to use CartProduct
   onRemove: (id: string) => void;
   onQuantityChange: (id: string, quantity: number) => void;
 }
 
 export const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onQuantityChange }) => {
-  const { toast } = useToast();
-
+  // Toast notifications are now handled in CartPage for consistency
   const handleRemove = () => {
     onRemove(item.id);
-    toast({
-      title: "Item removed",
-      description: `${item.name} has been removed from your cart.`,
-    });
   };
 
   const handleQuantityIncrement = () => {
@@ -28,16 +24,8 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onQuantityCh
   };
 
   const handleQuantityDecrement = () => {
-    if (item.quantity > 1) {
-      onQuantityChange(item.id, item.quantity - 1);
-    } else {
-      // Optionally remove if quantity becomes 0, or just prevent going below 1
-      toast({
-        title: "Minimum quantity",
-        description: "Quantity cannot be less than 1.",
-        variant: "destructive"
-      });
-    }
+    // onQuantityChange in CartPage will handle logic for quantity < 1
+    onQuantityChange(item.id, item.quantity - 1);
   };
   
   let aiHint = item.category.toLowerCase();
@@ -62,7 +50,7 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onQuantityCh
       </div>
       <div className="flex flex-col items-end space-y-2">
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="icon" onClick={handleQuantityDecrement} aria-label="Decrease quantity">
+          <Button variant="outline" size="icon" onClick={handleQuantityDecrement} aria-label="Decrease quantity" disabled={item.quantity <= 1}>
             <Minus className="h-4 w-4" />
           </Button>
           <Input 

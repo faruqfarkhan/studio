@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, Star } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import type React from 'react';
+import { addToCart } from '@/lib/cart-utils';
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +19,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { toast } = useToast();
 
   const handleAddToCart = () => {
+    addToCart(product);
     toast({
       title: "Added to cart!",
       description: `${product.name} has been added to your cart.`,
