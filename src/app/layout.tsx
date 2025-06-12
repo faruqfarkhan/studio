@@ -16,7 +16,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const gtmId = 'GTM-KJDQC5M'; // Using the GTM ID from your original script
+  const gtmId = 'GTM-NKJDQC5M'; // Using the GTM ID from your original script
 
   return (
     <html lang="en">
