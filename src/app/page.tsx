@@ -12,7 +12,7 @@ export default function HomePage() {
     <div className="space-y-12">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-accent text-primary-foreground p-8 md:p-16 rounded-lg shadow-xl text-center">
-        <h1 className="text-4xl md:text-5xl font-headline font-bold mb-4">Welcome, Faruq Farkhan Iskandar</h1>
+        <h1 className="text-4xl md:text-5xl font-headline font-bold mb-4">1Welcome, Faruq Farkhan Iskandar</h1>
         <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
           Discover vibrant styles and playful designs that bring joy to your everyday life.
         </p>
