@@ -22,34 +22,35 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | undefined>(undefined);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true); 
     const fetchedProduct = getProductById(params.id);
     if (fetchedProduct) {
       setProduct(fetchedProduct);
       setSelectedImage(fetchedProduct.imageUrl);
+      setIsLoading(false); 
     } else {
-      // If product not found on initial sync fetch, call notFound.
-      // This is okay here because it's before any stateful logic that depends on the product.
+      // If product is not found, notFound() will handle rendering the 404 page.
+      // No need to set isLoading to false here as notFound() should take over.
+      notFound();
     }
   }, [params.id]);
   
-  // Moved this check outside useEffect to call notFound() correctly for 'use client'
-  // This check runs once when the component first renders.
-  if (!product) {
-    const initialProductCheck = getProductById(params.id);
-    if (!initialProductCheck) {
-      notFound(); 
-    }
-    // If product is still null but initialProductCheck found it,
-    // it means useEffect will set it soon. Show loading.
-    // If initialProductCheck didn't find it, notFound() is called.
-    // This structure handles the case where product might be found after an initial null state.
-    if (!initialProductCheck && !product) { // Redundant check, but safe.
-         return <p className="text-center text-lg text-muted-foreground py-12">Loading product details...</p>;
-    }
+  if (isLoading) {
+     return <p className="text-center text-lg text-muted-foreground py-12">Loading product details...</p>;
   }
 
+  // If !isLoading and product is still null, it means notFound() was (or should have been) called.
+  // The component should ideally be unmounted by Next.js by this point.
+  // Returning null allows Next.js's notFound mechanism to take full control.
+  if (!product) { 
+    return null; 
+  }
+  
+  // If we reach here, isLoading is false and product is not null.
+  // So, we can safely render the product details.
 
   const handleAddToCart = () => {
     if (product) {
@@ -71,7 +72,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   };
 
-  const currentImageIndex = product?.images?.indexOf(selectedImage || product.imageUrl) ?? 0;
+  const currentImageIndex = product.images?.indexOf(selectedImage || product.imageUrl) ?? 0;
 
   const nextImage = () => {
     if (product && product.images && product.images.length > 1) {
@@ -87,23 +88,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   };
   
-  // Determine data-ai-hint
-  let aiHint = product?.category.toLowerCase() || "product";
-  if (product?.category === 'Apparel' || product?.category === 'Footwear') {
+  let aiHint = product.category.toLowerCase() || "product";
+  if (product.category === 'Apparel' || product.category === 'Footwear') {
     aiHint = "fashion model";
-  } else if (product?.category === 'Accessories') {
+  } else if (product.category === 'Accessories') {
     aiHint = "lifestyle accessory";
-  } else if (product?.category === 'Electronics') {
+  } else if (product.category === 'Electronics') {
     aiHint = "tech gadget";
   }
-
-  // This is a fallback for when the component first renders and product might be null
-  // The main notFound() call is now at the top level of the component function body
-  if (!product) {
-     // This will show loading until useEffect sets the product or notFound() is triggered
-     return <p className="text-center text-lg text-muted-foreground py-12">Loading product details...</p>;
-  }
-
 
   return (
     <div className="max-w-6xl mx-auto py-8">
@@ -189,3 +181,4 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     </div>
   );
 }
+

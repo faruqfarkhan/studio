@@ -73,3 +73,9 @@ export const updateCartQuantity = (productId: string, quantity: number): void =>
     }
   }
 };
+
+export const clearCart = (): void => {
+  if (typeof window !== 'undefined') {
+    saveCartToLocalStorage([]);
+  }
+};
