@@ -30,11 +30,11 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onQuantityCh
   
   let aiHint = item.category.toLowerCase();
   if (item.category === 'Apparel' || item.category === 'Footwear') {
-    aiHint = "fashion item";
+    aiHint = "fashion model";
   } else if (item.category === 'Accessories') {
-    aiHint = "product accessory";
+    aiHint = "lifestyle accessory";
   } else if (item.category === 'Electronics') {
-    aiHint = "electronic device";
+    aiHint = "tech gadget";
   }
 
 
@@ -74,3 +74,4 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onQuantityCh
     </div>
   );
 };
+
