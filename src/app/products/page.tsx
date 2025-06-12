@@ -8,7 +8,7 @@ import { products as allProducts, type Product } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ListFilter } from 'lucide-react';
+import { ListFilter, Search } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const uniqueCategories = ["All Categories", ...Array.from(new Set(allProducts.map(p => p.category)))];
@@ -60,6 +60,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           className="w-1/2" 
           value={minPriceInput}
           onChange={(e) => onMinPriceChange(e.target.value)}
+          aria-label="Minimum price"
         />
         <Input 
           type="number" 
@@ -67,6 +68,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           className="w-1/2" 
           value={maxPriceInput}
           onChange={(e) => onMaxPriceChange(e.target.value)}
+          aria-label="Maximum price"
         />
       </div>
     </div>
@@ -83,9 +85,18 @@ export default function ProductsPage() {
   const [appliedMinPrice, setAppliedMinPrice] = useState<number | null>(null);
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
   const [sortOption, setSortOption] = useState<string>("relevance");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
     let products = [...allProducts];
+
+    // Filter by search term
+    if (searchTerm) {
+      products = products.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
     // Filter by category
     if (selectedCategory !== "All Categories") {
@@ -109,10 +120,10 @@ export default function ProductsPage() {
       // For now, newest is same as relevance due to lack of timestamp in mock data
       // products.sort((a, b) => (b.dateAdded || 0) - (a.dateAdded || 0));
     }
-    // 'relevance' uses the default order from allProducts or after category/price filtering
+    // 'relevance' uses the default order from allProducts or after category/price/search filtering
 
     setDisplayedProducts(products);
-  }, [selectedCategory, appliedMinPrice, appliedMaxPrice, sortOption]);
+  }, [selectedCategory, appliedMinPrice, appliedMaxPrice, sortOption, searchTerm]);
 
   const handleApplyPriceFilters = () => {
     const min = parseFloat(minPriceInput);
@@ -156,10 +167,10 @@ export default function ProductsPage() {
       <div className="flex-1">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <h1 className="text-3xl font-headline font-bold">Our Products</h1>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
             <span className="text-sm text-muted-foreground">Sort by:</span>
             <Select value={sortOption} onValueChange={setSortOption}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Relevance" />
               </SelectTrigger>
               <SelectContent>
@@ -169,6 +180,19 @@ export default function ProductsPage() {
                 <SelectItem value="newest">Newest</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input 
+              type="search"
+              placeholder="Search products..."
+              className="pl-10 w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
         
