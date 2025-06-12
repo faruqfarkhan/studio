@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
 import type { CartProduct } from '@/lib/cart-utils';
-import { getCartFromLocalStorage, removeFromCart, updateCartQuantity } from '@/lib/cart-utils';
+import { getCartFromLocalStorage, removeFromCart, updateCartQuantity, clearCart } from '@/lib/cart-utils';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CartPage() {
@@ -52,15 +52,32 @@ export default function CartPage() {
         description: "Quantity cannot be less than 1. Remove item instead.",
         variant: "destructive"
       });
-      // Optionally, auto-remove if quantity becomes 0, handled by updateCartQuantity
-      // updateCartQuantity(id, 0); // This would trigger removal
-      // setCartItems(getCartFromLocalStorage()); 
       return;
     }
     updateCartQuantity(id, quantity);
     setCartItems(prevItems => 
       prevItems.map(item => item.id === id ? { ...item, quantity } : item).filter(item => item.quantity > 0)
     );
+  };
+
+  const handleProceedToCheckout = () => {
+    if (cartItems.length === 0) {
+      toast({
+        title: "Cart is empty",
+        description: "Add items to your cart before proceeding to checkout.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Simulate checkout process
+    clearCart();
+    setCartItems([]); // Immediately clear items from state for UI update
+    toast({
+      title: "Checkout Initiated!",
+      description: "Your order has been (simulated) placed and your cart has been cleared.",
+    });
+    // In a real app, you would redirect to a checkout page or handle payment here.
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -112,7 +129,7 @@ export default function CartPage() {
             <span>${total.toFixed(2)}</span>
           </div>
         </div>
-        <Button size="lg" className="w-full mt-8">
+        <Button size="lg" className="w-full mt-8" onClick={handleProceedToCheckout}>
           Proceed to Checkout
         </Button>
       </div>
