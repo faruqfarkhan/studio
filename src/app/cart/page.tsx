@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { CartItem } from '@/components/cart/CartItem';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { products, type Product } from '@/lib/mock-data'; // Assuming mock products for demo
+import type { Product } from '@/lib/mock-data'; // Assuming mock products for demo
 import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
 
@@ -16,15 +16,15 @@ interface CartProduct extends Product {
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartProduct[]>([]);
 
-  useEffect(() => {
-    // Simulate fetching cart items. In a real app, this would come from context/API.
-    // For demo, let's add a few items from mock data.
-    const demoCart: CartProduct[] = products.slice(0, 3).map((p, index) => ({
-      ...p,
-      quantity: index + 1, 
-    }));
-    setCartItems(demoCart);
-  }, []);
+  // useEffect(() => {
+  //   // Simulate fetching cart items. In a real app, this would come from context/API.
+  //   // For demo, let's add a few items from mock data.
+  //   // const demoCart: CartProduct[] = products.slice(0, 3).map((p, index) => ({
+  //   //   ...p,
+  //   //   quantity: index + 1, 
+  //   // }));
+  //   // setCartItems(demoCart);
+  // }, []);
 
   const handleRemoveItem = (id: string) => {
     setCartItems(prevItems => prevItems.filter(item => item.id !== id));
