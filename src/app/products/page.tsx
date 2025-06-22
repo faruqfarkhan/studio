@@ -124,6 +124,24 @@ export default function ProductsPage() {
 
     setDisplayedProducts(products);
   }, [selectedCategory, appliedMinPrice, appliedMaxPrice, sortOption, searchTerm]);
+  
+  useEffect(() => {
+    // Use a timeout to "debounce" the search event
+    const handler = setTimeout(() => {
+      // Only push to dataLayer if searchTerm is not empty and dataLayer exists
+      if (searchTerm && typeof window !== 'undefined' && window.dataLayer) {
+        window.dataLayer.push({
+          event: 'search',
+          search_term: searchTerm,
+        });
+      }
+    }, 500); // 500ms delay after user stops typing
+
+    // Cleanup function to clear the timeout if the user types again
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
 
   const handleApplyPriceFilters = () => {
     const min = parseFloat(minPriceInput);
