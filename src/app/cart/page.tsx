@@ -31,12 +31,31 @@ export default function CartPage() {
     };
   }, []);
 
+  useEffect(() => {
+    // Push view_cart event to dataLayer when cart items are loaded/updated
+    if (cartItems.length > 0 && typeof window.dataLayer !== 'undefined') {
+      const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+      window.dataLayer.push({
+        event: 'view_cart',
+        ecommerce: {
+          currency: 'USD',
+          value: subtotal,
+          items: cartItems.map(item => ({
+            item_id: item.id,
+            item_name: item.name,
+            item_category: item.category,
+            price: item.price,
+            quantity: item.quantity,
+          }))
+        }
+      });
+    }
+  }, [cartItems]);
+
   const handleRemoveItem = (id: string) => {
     const itemToRemove = cartItems.find(item => item.id === id);
-    removeFromCart(id);
-    // Optimistically update UI, or rely on 'cartUpdated' event.
-    // For immediate feedback, direct state update is good.
-    setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+    removeFromCart(id); // This now handles the dataLayer push
     if (itemToRemove) {
       toast({
         title: "Item removed",
@@ -46,19 +65,14 @@ export default function CartPage() {
   };
 
   const handleQuantityChange = (id: string, quantity: number) => {
-    if (quantity < 1) {
-      toast({
-        title: "Minimum quantity",
-        description: "Quantity cannot be less than 1. Remove item instead.",
-        variant: "destructive"
-      });
-      return;
-    }
+    // The cart-utils function will handle quantities <= 0 by removing the item.
+    // The 'cartUpdated' event listener will then refresh the UI state.
     updateCartQuantity(id, quantity);
-    setCartItems(prevItems => 
-      prevItems.map(item => item.id === id ? { ...item, quantity } : item).filter(item => item.quantity > 0)
-    );
   };
+  
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const shippingCost = subtotal > 50 || subtotal === 0 ? 0 : 10; // Example shipping logic
+  const total = subtotal + shippingCost;
 
   const handleProceedToCheckout = () => {
     if (cartItems.length === 0) {
@@ -70,19 +84,30 @@ export default function CartPage() {
       return;
     }
 
-    // Simulate checkout process
+    if (typeof window.dataLayer !== 'undefined') {
+      window.dataLayer.push({
+        event: 'begin_checkout',
+        ecommerce: {
+          currency: 'USD',
+          value: total,
+          items: cartItems.map(item => ({
+            item_id: item.id,
+            item_name: item.name,
+            item_category: item.category,
+            price: item.price,
+            quantity: item.quantity
+          }))
+        }
+      });
+    }
+
+    // Simulate checkout process. clearCart will trigger the 'cartUpdated' event.
     clearCart();
-    setCartItems([]); // Immediately clear items from state for UI update
     toast({
       title: "Checkout Initiated!",
       description: "Your order has been (simulated) placed and your cart has been cleared.",
     });
-    // In a real app, you would redirect to a checkout page or handle payment here.
   };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingCost = subtotal > 50 || subtotal === 0 ? 0 : 10; // Example shipping logic
-  const total = subtotal + shippingCost;
 
   if (cartItems.length === 0) {
     return (

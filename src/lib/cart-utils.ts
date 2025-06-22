@@ -40,7 +40,6 @@ export const addToCart = (product: Product): void => {
   if (existingItemIndex > -1) {
     cart[existingItemIndex].quantity += 1;
   } else {
-    // Ensure all Product fields are spread, and add quantity
     const newCartItem: CartProduct = { 
       ...product, 
       quantity: 1 
@@ -48,11 +47,48 @@ export const addToCart = (product: Product): void => {
     cart.push(newCartItem);
   }
   saveCartToLocalStorage(cart);
+  
+  if (typeof window.dataLayer !== 'undefined') {
+    window.dataLayer.push({
+      event: 'add_to_cart',
+      ecommerce: {
+        currency: 'USD',
+        value: product.price,
+        items: [{
+          item_id: product.id,
+          item_name: product.name,
+          item_category: product.category,
+          price: product.price,
+          quantity: 1
+        }]
+      }
+    });
+  }
 };
 
 export const removeFromCart = (productId: string): void => {
   if (typeof window === 'undefined') return;
+  
   let cart = getCartFromLocalStorage();
+  const itemToRemove = cart.find(item => item.id === productId);
+
+  if (itemToRemove && typeof window.dataLayer !== 'undefined') {
+    window.dataLayer.push({
+      event: 'remove_from_cart',
+      ecommerce: {
+        currency: 'USD',
+        value: itemToRemove.price * itemToRemove.quantity,
+        items: [{
+          item_id: itemToRemove.id,
+          item_name: itemToRemove.name,
+          item_category: itemToRemove.category,
+          price: itemToRemove.price,
+          quantity: itemToRemove.quantity
+        }]
+      }
+    });
+  }
+  
   cart = cart.filter(item => item.id !== productId);
   saveCartToLocalStorage(cart);
 };
@@ -67,9 +103,9 @@ export const updateCartQuantity = (productId: string, quantity: number): void =>
       cart[itemIndex].quantity = quantity;
       saveCartToLocalStorage(cart);
     } else {
-      // If quantity is 0 or less, remove the item by creating a new array
-      const updatedCart = cart.filter(item => item.id !== productId);
-      saveCartToLocalStorage(updatedCart);
+      // If quantity is 0 or less, remove the item.
+      // This will also fire the remove_from_cart event.
+      removeFromCart(productId);
     }
   }
 };
